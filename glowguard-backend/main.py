@@ -17,7 +17,7 @@ app = FastAPI(
 )
 
 # Configure CORS
-origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+origins = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:3001").split(",")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -39,12 +39,40 @@ async def startup():
 
 # Include routers
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
-# Attempt to load predictions router only if its optional dependencies are available
+
+# Try to load predictions router
 try:
     from app.routes import predictions
     app.include_router(predictions.router, prefix="/api/predictions", tags=["Predictions"])
+except ImportError as e:
+    print(f"⚠️  Predictions router import failed: {e}")
+    print("Creating stub predictions endpoint...")
+    # Create a stub router so the image upload page doesn't crash
+    from fastapi import APIRouter
+    stub_router = APIRouter()
+    
+    @stub_router.post("/analyze")
+    async def analyze_stub():
+        return {
+            "detail": "Predictions service is unavailable. Please check server logs.",
+            "error": str(e)
+        }
+    
+    app.include_router(stub_router, prefix="/api/predictions", tags=["Predictions"])
 except Exception as e:
-    print("Predictions router not loaded (optional):", e)
+    print(f"⚠️  Error loading predictions router: {e}")
+    print("Creating stub predictions endpoint...")
+    from fastapi import APIRouter
+    stub_router = APIRouter()
+    
+    @stub_router.post("/analyze")
+    async def analyze_stub():
+        return {
+            "detail": "Predictions service is unavailable. Please check server logs.",
+            "error": str(e)
+        }
+    
+    app.include_router(stub_router, prefix="/api/predictions", tags=["Predictions"])
 app.include_router(products.router, prefix="/api/products", tags=["Products"])
 app.include_router(recommendations.router, prefix="/api/recommendations", tags=["Recommendations"])
 app.include_router(users.router, prefix="/api/users", tags=["Users"])

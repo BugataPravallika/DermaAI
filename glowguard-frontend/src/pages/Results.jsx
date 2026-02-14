@@ -12,10 +12,14 @@ export default function Results() {
   useEffect(() => {
     const fetchResults = async () => {
       try {
+        console.log('Fetching results for ID:', id)
         const response = await api.get(`/predictions/${id}`)
+        console.log('Results response:', response.data)
         setResult(response.data)
       } catch (error) {
-        toast.error('Failed to load results')
+        console.error('Failed to fetch results:', error)
+        console.error('Error details:', error.response?.data)
+        toast.error(error.response?.data?.detail || 'Failed to load results')
       } finally {
         setLoading(false)
       }
@@ -23,6 +27,8 @@ export default function Results() {
 
     if (id) {
       fetchResults()
+    } else {
+      setLoading(false)
     }
   }, [id])
 

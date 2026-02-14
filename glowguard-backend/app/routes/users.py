@@ -55,3 +55,41 @@ async def delete_account(
     db.commit()
     
     return {"message": "Account deleted successfully"}
+@router.get("/admin/all-users")
+async def get_all_users(db: Session = Depends(get_db)):
+    """
+    ✅ ADMIN ENDPOINT: View all registered users
+    Use this to see who signed up!
+    """
+    users = db.query(User).all()
+    
+    return {
+        "total_users": len(users),
+        "users": [
+            {
+                "id": user.id,
+                "email": user.email,
+                "username": user.username,
+                "full_name": user.full_name,
+                "skin_type": user.skin_type,
+                "created_at": user.created_at.isoformat() if user.created_at else None,
+                "is_active": user.is_active,
+            }
+            for user in users
+        ]
+    }
+
+@router.get("/admin/stats")
+async def get_user_stats(db: Session = Depends(get_db)):
+    """
+    ✅ ADMIN ENDPOINT: Get user statistics
+    """
+    total_users = db.query(User).count()
+    active_users = db.query(User).filter(User.is_active == True).count()
+    inactive_users = db.query(User).filter(User.is_active == False).count()
+    
+    return {
+        "total_registered_users": total_users,
+        "active_users": active_users,
+        "inactive_users": inactive_users,
+    }

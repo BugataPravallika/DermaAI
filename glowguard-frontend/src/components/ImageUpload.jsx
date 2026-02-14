@@ -1,16 +1,18 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FiUpload, FiLoader } from 'react-icons/fi'
-import api from '../../utils/api'
+import api from '../utils/api'
 import { toast } from 'react-toastify'
-import { useAuthStore } from '../../utils/store'
-import { usePredictionStore } from '../../utils/store'
+import { useAuthStore } from '../utils/store'
+import { usePredictionStore } from '../utils/store'
+import ProfessionalResultsDisplay from './ProfessionalResultsDisplay'
 
 export default function ImageUpload() {
   const [file, setFile] = useState(null)
   const [preview, setPreview] = useState(null)
   const [loading, setLoading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
+  const [result, setResult] = useState(null)
   const navigate = useNavigate()
   const { token } = useAuthStore()
   const { addPrediction } = usePredictionStore()
@@ -78,22 +80,37 @@ export default function ImageUpload() {
       const formData = new FormData()
       formData.append('file', file)
 
-      const response = await api.post('/predictions/analyze', formData, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      })
-
+      const response = await api.post('/predictions/analyze', formData)
+      console.log('Analysis response:', response.data)
+      
+      setResult(response.data)
       addPrediction(response.data)
       toast.success('Analysis complete!')
-      navigate(`/results/${response.data.prediction.id}`)
     } catch (error) {
       console.error('Error analyzing image:', error)
+      console.error('Error details:', error.response?.data)
       toast.error(error.response?.data?.detail || 'Error analyzing image')
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleAnalyzeAnother = () => {
+    setFile(null)
+    setPreview(null)
+    setResult(null)
+  }
+
+  // If results are ready, show professional display
+  if (result) {
+    return (
+      <div className="w-full">
+        <ProfessionalResultsDisplay 
+          results={result}
+          onAnalyzeAnother={handleAnalyzeAnother}
+        />
+      </div>
+    )
   }
 
   return (

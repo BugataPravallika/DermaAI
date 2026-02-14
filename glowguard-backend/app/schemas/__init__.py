@@ -78,6 +78,12 @@ class ProductResponse(ProductBase):
     class Config:
         from_attributes = True
 
+# Top-3 Prediction Schema (for differential diagnosis)
+class DifferentialDiagnosis(BaseModel):
+    disease: str
+    confidence: float
+    class_idx: int
+
 # Analysis Result Schemas
 class SkinAnalysisResult(BaseModel):
     disease_name: str
@@ -94,6 +100,8 @@ class AnalysisCombinedResponse(BaseModel):
     prediction: PredictionResponse
     analysis: SkinAnalysisResult
     recommendations: List[RecommendationResponse]
+    top_3_predictions: Optional[List[DifferentialDiagnosis]] = None
+    medical_disclaimer: Optional[str] = None
 
 # Auth Schemas
 class TokenResponse(BaseModel):

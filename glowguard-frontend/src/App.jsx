@@ -1,5 +1,5 @@
 import './styles/globals.css'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
@@ -18,28 +18,39 @@ import Register from './pages/Register'
 import BeforeAfter from './pages/BeforeAfter'
 import NotFound from './pages/NotFound'
 
+function AppContent() {
+  const location = useLocation()
+  
+  // Hide header and footer on auth pages
+  const hideLayout = ['/login', '/register'].includes(location.pathname)
+
+  return (
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-pastel-cream via-pastel-pink/10 to-pastel-lavender/10">
+      {!hideLayout && <Header />}
+      
+      <main className={hideLayout ? "w-full" : "flex-grow"}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/upload" element={<Upload />} />
+          <Route path="/results/:id" element={<Results />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/before-after" element={<BeforeAfter />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
+
+      {!hideLayout && <Footer />}
+    </div>
+  )
+}
+
 function App() {
   return (
-    <Router>
-      <div className="flex flex-col min-h-screen bg-gradient-to-br from-pastel-cream via-pastel-pink/10 to-pastel-lavender/10">
-        <Header />
-        
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/upload" element={<Upload />} />
-            <Route path="/results/:id" element={<Results />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/before-after" element={<BeforeAfter />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </main>
-
-        <Footer />
-      </div>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <AppContent />
       
       <ToastContainer 
         position="bottom-right"
